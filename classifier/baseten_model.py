@@ -41,18 +41,13 @@ class BasetenBirdClassifier:
     or plain text that we parse defensively.
     """
 
-    _PROMPT = (
-        "You are an expert ornithologist. Identify the bird species in this image. "
-        "Reply in JSON with keys: species (string), confidence (float 0-1), "
-        "reasoning (one sentence). If you cannot identify the bird, set species to "
-        "'Unknown' and confidence to 0.0."
-    )
+    _PROMPT = "Identify the bird species in this image."
 
     def __init__(
         self,
         api_key: Optional[str] = None,
         model_id: Optional[str] = None,
-        timeout: int = 30,
+        timeout: int = 120,
     ) -> None:
         self.api_key = api_key or os.environ.get("BASETEN_API_KEY", "")
         self.model_id = model_id or os.environ.get("BASETEN_MODEL_ID", "")
@@ -118,6 +113,8 @@ class BasetenBirdClassifier:
             "Content-Type": "application/json",
         }
         resp = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
+        if not resp.ok:
+            print(f"[baseten] {resp.status_code} error: {resp.text[:500]}")
         resp.raise_for_status()
         data = resp.json()
 
@@ -131,6 +128,10 @@ class BasetenBirdClassifier:
         import re
 
         text = raw.strip()
+
+        # Strip markdown code fences if present
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text).strip()
 
         # Try strict JSON first
         try:

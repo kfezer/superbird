@@ -29,8 +29,11 @@ import sys
 from pathlib import Path
 
 
-def classify_images(paths: list[Path], threshold: float) -> None:
+def classify_images(paths: list[str], threshold: float) -> None:
+    import io
+    import urllib.request
     from classifier import BirdClassifier
+    from PIL import Image
 
     clf = BirdClassifier(
         weights_path=str(Path("weights/mobilenet_cub200.pt")),
@@ -39,15 +42,28 @@ def classify_images(paths: list[Path], threshold: float) -> None:
     )
 
     for path in paths:
-        if not path.exists():
-            print(f"[!] File not found: {path}")
-            continue
+        is_url = str(path).startswith("http://") or str(path).startswith("https://")
+        if is_url:
+            try:
+                with urllib.request.urlopen(str(path)) as resp:
+                    image = Image.open(io.BytesIO(resp.read())).convert("RGB")
+            except Exception as e:
+                print(f"[!] Could not fetch URL: {path} ({e})")
+                continue
+            display_name = str(path).split("/")[-1]
+        else:
+            local = Path(path)
+            if not local.exists():
+                print(f"[!] File not found: {path}")
+                continue
+            image = local
+            display_name = local.name
 
-        result = clf.classify(path)
+        result = clf.classify(image)
         fallback_tag = " [baseten fallback]" if result.used_fallback else ""
         confidence_str = f"{result.confidence:.0%}" if result.confidence is not None else "n/a"
 
-        print(f"\n{path.name}")
+        print(f"\n{display_name}")
         print(f"  Species:    {result.label}")
         print(f"  Confidence: {confidence_str}{fallback_tag}")
 
@@ -96,7 +112,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Tiered bird species classifier: local-first, Baseten fallback"
     )
-    parser.add_argument("images", nargs="*", type=Path,
+    parser.add_argument("images", nargs="*", type=str,
                         help="Image file(s) to classify")
     parser.add_argument("--threshold", type=float,
                         default=float(os.environ.get("CONFIDENCE_THRESHOLD", "0.70")),
