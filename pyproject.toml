@@ -1,0 +1,35 @@
+[project]
+name = "superbird-buddy"
+version = "0.1.0"
+description = "Tiered bird species classifier — local MobileNetV3 first, Baseten LLaVA fallback"
+requires-python = ">=3.10"
+
+dependencies = [
+    "torch>=2.1.0",
+    "torchvision>=0.16.0",
+    "Pillow>=9.3.0",
+    "requests>=2.31.0",
+    "numpy>=1.24.0",
+    "tqdm>=4.65.0",
+]
+
+# ------------------------------------------------------------------ #
+# NOTE: The `baseten` CLI/SDK is intentionally NOT a runtime dep.     #
+# It pins numpy==1.23.5 (via truss), which conflicts with torch.      #
+# Install it in an isolated tool environment for deploying Trusses:   #
+#   uv tool install baseten                                            #
+# ------------------------------------------------------------------ #
+
+[tool.uv]
+# Keep a local CPU-only torch install slim — Baseten handles GPU.
+# Uncomment to force CPU-only wheels (much smaller download):
+# extra-index-url = ["https://download.pytorch.org/whl/cpu"]
+
+[tool.hatch.build.targets.wheel]
+# Our importable package is `classifier/`. app.py is a top-level script —
+# run it directly: `uv run python app.py` or `.venv/bin/python app.py`
+packages = ["classifier"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

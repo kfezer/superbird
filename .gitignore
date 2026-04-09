@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# uv / virtualenv
+.venv/
+
+# Model weights and dataset (large binaries — download via scripts/)
+weights/
+data/
+
+# Baseten checkpoint export files — contain signed AWS URLs and account info
+*_checkpoints.json
+
+# Fallback inference log — may contain image paths from your local machine
+logs/fallback_log.csv
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# macOS
+.DS_Store
+
+# Temp files from download_checkpoint.py
+weights/_checkpoint_tmp.pt
