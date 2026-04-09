@@ -95,8 +95,8 @@ uv tool update-shell
 export BASETEN_API_KEY=your_key
 export BASETEN_MODEL_ID=your_deployed_llava_model_id
 
-# Classify a single image
-uv run python app.py warbler.jpg
+# Classify a single image (default threshold: 70%)
+uv run python app.py photo.jpg
 
 # Classify multiple images with a custom threshold
 uv run python app.py *.jpg --threshold 0.65
@@ -104,6 +104,24 @@ uv run python app.py *.jpg --threshold 0.65
 # Show fallback log stats (which images triggered Baseten, agreement rate, etc.)
 uv run python app.py --log-stats
 ```
+
+### Example: local model confused, Baseten corrects it
+
+```bash
+uv run python app.py examples/eastern_yellow_robin.jpg
+```
+
+```
+[local] Loaded weights from weights/mobilenet_cub200.pt
+
+eastern_yellow_robin.jpg
+  Species:    Yellow Warbler
+  Confidence: 95% [baseten fallback]
+  Local was:  Tropical Kingbird (22%)
+```
+
+The local model guessed "Tropical Kingbird" at 22% confidence — below the 70% threshold.
+Baseten's LLaVA model correctly identified it as a Yellow Warbler at 95%.
 
 ---
 
